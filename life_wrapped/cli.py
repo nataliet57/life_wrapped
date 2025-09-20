@@ -1,6 +1,7 @@
 import argparse
 from . import io, stats
 from life_wrapped.renderers import receipt_text
+from life_wrapped.renderers import calendar_heatmap
 
 def main():
     parser = argparse.ArgumentParser("life-wrapped")
@@ -10,9 +11,11 @@ def main():
     args = parser.parse_args()
 
     days = io.load_days_from_excel(args.file)
-    months = stats.bucket_by_month(days)
+    months_cleaned = stats.bucket_by_month(days)
+    print(months_cleaned)
     print("rendering results")
-    print(receipt_text.retrieve_results(months, 12, 12, 12))
+    print(receipt_text.retrieve_results(months_cleaned, 12, 12, 12))
+    print(calendar_heatmap.build_calendar_grid(months_cleaned))
 
 
 if __name__ == "__main__":
