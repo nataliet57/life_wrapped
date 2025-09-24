@@ -1,10 +1,10 @@
 import calendar
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 
 @dataclass
 class DayRecord:
-    dt: date
+    dt: datetime
     day_score: float
     highlight: str
     sleep: float

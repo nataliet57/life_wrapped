@@ -25,7 +25,7 @@ def build_7_w_array(days, month_label):
     
     for d in days:
         day_of_month = d.dt.day
-        weekday = d.dt.weekday()  # 0=Mon
+        weekday = d.dt.weekday()
         week = (day_of_month + offset - 1) // 7
         A[weekday][week]= d.day_score
 
