@@ -1,7 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 import os 
-from models import DayRecord
+from life_wrapped.models import DayRecord
 from datetime import datetime
 
 
@@ -13,7 +13,7 @@ client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
 )
 
-def format_daily_prompt(days: [DayRecord]):
+def format_daily_prompt(days):
     prompt_lines = []
 
     for day in days:
@@ -22,7 +22,9 @@ def format_daily_prompt(days: [DayRecord]):
 
     # Join into a single prompt string
     return "\n".join(prompt_lines)
+days=[DayRecord(dt=datetime(2025, 5, 15), day_score=8.0, highlight='in n out gift card from trivia night', sleep=3, movement=1, spiritual=2.0), DayRecord(dt=datetime(2025, 5, 26), day_score=8.75, highlight='biking ', sleep=4, movement=4, spiritual=1.0), DayRecord(dt=datetime(2025, 5, 30), day_score=7.2, highlight='blew a flat tire, gardened a bit with Ian', sleep=3, movement=3, spiritual=2.0), DayRecord(dt=datetime(2025, 5, 31), day_score=7.2, highlight='sunrise hike, talking with will about his life struggles', sleep=1, movement=4, spiritual=3.0)]
 prompt = format_daily_prompt(days)
+print(prompt)
 
 
 def generate_response(prompt):
@@ -37,7 +39,7 @@ def generate_response(prompt):
     )
     return completion.choices[0].message.content
 
-result = generate_response(prompt)
+# result = generate_response(prompt)
 # print(result)
 
 

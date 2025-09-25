@@ -2,16 +2,7 @@ from dataclasses import dataclass
 from collections import Counter, defaultdict
 from typing import Iterable
 
-from life_wrapped.models import DayRecord, MonthBucket
-
-@dataclass
-class HighlightsSummary:
-    month_name: int
-    days_logged: int
-    best_day: DayRecord
-    worst_day: DayRecord
-    average_score: int
-    number_of_days_with_above_average_sleep: int
+from life_wrapped.models import DayRecord, MonthBucket, HighlightsSummary
 
 def get_number_of_days_with_above_average_sleep(month: MonthBucket)-> int:
     return sum(1 for d in month.days if d.sleep and d.sleep > 2)

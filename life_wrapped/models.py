@@ -17,4 +17,14 @@ class MonthBucket:
     month: int
     days: list[DayRecord]
 
+@dataclass
+class HighlightsSummary:
+    month_name: int
+    days_logged: int
+    best_day: DayRecord
+    worst_day: DayRecord
+    average_score: int
+    number_of_days_with_above_average_sleep: int
+
+
 month_map = {i: calendar.month_name[i] for i in range(1, 13)}

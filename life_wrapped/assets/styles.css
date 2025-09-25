@@ -1,0 +1,50 @@
+@font-face {
+  font-family: 'receipt';
+  src: url('Merchant_Copy.ttf') format('truetype');
+  size-adjust: 115%;
+}
+.customize {
+  min-width: 30%;
+  max-width: 50%;
+  padding-left: 2vw;
+  align-self: stretch;
+}
+.customize-header {
+  font-weight: 700;
+  font-size: 36px;
+  padding-bottom: 1.5vh;
+}
+
+.receiptContainer {
+  background-image: url('wrinkled-paper-texture-7.jpg');
+  background-position: center;
+  width: 340px;
+  filter: brightness(105%);
+  padding: 20px;
+  text-transform: uppercase;
+}
+
+.date {
+  font-family: 'receipt', 'Anonymous Pro', 'Courier New', Courier, monospace;
+  font-size: 2rem;
+  line-height: 2rem;
+}
+.begin {
+  padding-left: 0vh;
+}
+
+thead {
+  border-top: 1px dashed #000;
+  border-bottom: 1px dashed #000;
+}
+.stats {
+  font-family: 'receipt', 'Anonymous Pro', 'Courier New', Courier, monospace;
+  border-collapse: collapse;
+  margin: 5px 0vh;
+}
+
+.length {
+  text-align: right;
+  padding-left: 10px;
+  padding-right: 0px;
+}
