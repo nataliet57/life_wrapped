@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'receipt';
-  src: url('Merchant_Copy.ttf') format('truetype');
+  src: url('./assets/Merchant_Copy.ttf') format('truetype');
   size-adjust: 115%;
 }
 .customize {
@@ -16,9 +16,9 @@
 }
 
 .receiptContainer {
-  background-image: url('wrinkled-paper-texture-7.jpg');
+  background-image: url('./assets/wrinkled-paper-texture-7.jpg');
   background-position: center;
-  width: 340px;
+  width: 440px;
   filter: brightness(105%);
   padding: 20px;
   text-transform: uppercase;
@@ -47,4 +47,9 @@ thead {
   text-align: right;
   padding-left: 10px;
   padding-right: 0px;
+}
+
+.name {
+  width: 195px;
+  overflow: auto;
 }

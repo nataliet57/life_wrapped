@@ -21,7 +21,7 @@ class MonthBucket:
 class HighlightsSummary:
     month_name: int
     days_logged: int
-    best_day: DayRecord
+    top_four_days: list
     worst_day: DayRecord
     average_score: int
     number_of_days_with_above_average_sleep: int

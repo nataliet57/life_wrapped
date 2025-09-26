@@ -7,11 +7,16 @@ from life_wrapped.models import DayRecord, MonthBucket, HighlightsSummary
 def get_number_of_days_with_above_average_sleep(month: MonthBucket)-> int:
     return sum(1 for d in month.days if d.sleep and d.sleep > 2)
 
-def get_best_day(month: MonthBucket) -> DayRecord:
-    return max(month.days, key=lambda d:d.day_score)
+def get_best_days(month: MonthBucket) -> [DayRecord]:
+    top_4_days = []
+    heap = heapq.nlargest(4, month.days, key=lambda d:d.day_score)
+    for day in heap:
+        top_4_days.append((day.highlight, day.day_score))
+    return top_4_days
 
 def get_worst_day(month: MonthBucket) -> DayRecord:
-    return min(month.days, key=lambda d:d.day_score)
+    worst_day = min(month.days, key=lambda d:d.day_score)
+    return (worst_day.highlight, worst_day.day_score)
 
 def get_monthly_average_score(month: MonthBucket) -> int:
     return sum(d.day_score for d in month.days)/len(month.days)
@@ -21,7 +26,7 @@ def monthly_summary(month: MonthBucket) -> HighlightsSummary:
     return HighlightsSummary(
         month_name = month.month,
         days_logged = len(month.days),
-        best_day = get_best_day(month),
+        top_four_days = get_best_days(month),
         worst_day = get_worst_day(month),
         average_score = get_monthly_average_score(month),
         number_of_days_with_above_average_sleep = get_number_of_days_with_above_average_sleep(month),
