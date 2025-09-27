@@ -1,26 +1,30 @@
-from flask import Flask, request, jsonify
-from life_wrapped import io, stats
+import sys
 import tempfile
+from pathlib import Path
+
+from flask import Flask, request, jsonify
+
+from life_wrapped import io, stats
+from flask_cors import CORS
 
 app = Flask(__name__)
-@app.route("/upload", methods=["POST"])
+CORS(app)
+
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
+
+@app.post("/upload")
 
 def upload():
     file = request.files["file"]
     if not file:
-        return "No file uploaded", 400
+        return jsonify({"error": "no file"}), 400
 
-    # save file to temp
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-        file.save(tmp.name)
-        path = tmp.name
+    # run your pipeline here...
+    return jsonify([{"message": "File uploaded", "filename": file.filename}])
 
-    # run your pipeline
-    days = io.load_days_from_excel(path)
-    buckets = stats.bucket_by_month(days)
-    summaries = [stats.monthly_summary(m).__dict__ for m in buckets]
-
-    return jsonify(summaries)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

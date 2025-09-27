@@ -3,28 +3,26 @@ import './index.css';
 import ReceiptGenerator from './ReceiptGenerator';
 
 export default function App() {
-  const [summaries, setSummaries] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [receipts, setReceipts] = useState(null);
 
   async function handleUpload(e) {
     e.preventDefault();
     const fileInput = e.target.elements.file;
     if (!fileInput.files?.length) return;
 
-    setLoading(true);
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
 
     try {
-      const res = await fetch("/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+      const res = await fetch("http://127.0.0.1:5000/upload", {
+        method: "POST",
+        body: formData,
+      });
+      console.log("status", res.status);
       const data = await res.json();
-      setSummaries(data);  // should be a list of monthly summaries
+      console.log("data", data);
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong uploading the file.");
-    } finally {
-      setLoading(false);
+      console.error("fetch failed", err);
     }
   }
 
@@ -45,15 +43,13 @@ export default function App() {
         </form>
       </section>
 
-      {loading && <p>Loading...</p>}
-
-      {summaries.length > 0 && (
+      {receipts && (
         <section>
-          {summaries.map((s, i) => (
+          {receipts.map((summary, i) => (
             <ReceiptGenerator
               key={i}
-              summary={s}
-              title={`${s.month_name} ${s.year}`}
+              summary={summary}
+              title={`${summary.month_name} ${summary.year}`}
             />
           ))}
         </section>

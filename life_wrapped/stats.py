@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from typing import Iterable
 
 from life_wrapped.models import DayRecord, MonthBucket, HighlightsSummary
+import heapq
 
 def get_number_of_days_with_above_average_sleep(month: MonthBucket)-> int:
     return sum(1 for d in month.days if d.sleep and d.sleep > 2)
