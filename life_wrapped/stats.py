@@ -1,48 +1,65 @@
-from dataclasses import dataclass
-from collections import Counter, defaultdict
-from typing import Iterable
+"""Statistics helpers for life-wrapped summaries."""
+from __future__ import annotations
 
-from life_wrapped.models import DayRecord, MonthBucket, HighlightsSummary
 import heapq
+from typing import Iterable, Dict, Any, List
 
-def get_number_of_days_with_above_average_sleep(month: MonthBucket)-> int:
+from life_wrapped.models import DayRecord, MonthBucket, month_map
+
+
+def get_number_of_days_with_above_average_sleep(month: MonthBucket) -> int:
+    """Counts the number of days where sleep scored above the threshold."""
     return sum(1 for d in month.days if d.sleep and d.sleep > 2)
 
-def get_best_days(month: MonthBucket) -> [DayRecord]:
-    top_4_days = []
-    heap = heapq.nlargest(4, month.days, key=lambda d:d.day_score)
-    for day in heap:
-        top_4_days.append((day.highlight, day.day_score))
-    return top_4_days
 
-def get_worst_day(month: MonthBucket) -> DayRecord:
-    worst_day = min(month.days, key=lambda d:d.day_score)
-    return (worst_day.highlight, worst_day.day_score)
+def _serialize_day(day: DayRecord) -> Dict[str, Any]:
+    return {
+        "dt": day.dt.isoformat(),
+        "day_score": day.day_score,
+        "highlight": day.highlight,
+        "sleep": day.sleep,
+        "movement": day.movement,
+        "spiritual": day.spiritual,
+    }
 
-def get_monthly_average_score(month: MonthBucket) -> int:
-    return sum(d.day_score for d in month.days)/len(month.days)
 
-def monthly_summary(month: MonthBucket) -> HighlightsSummary:
-    # compute averages, top highlights, best/worst days
-    return HighlightsSummary(
-        month_name = month.month,
-        days_logged = len(month.days),
-        top_four_days = get_best_days(month),
-        worst_day = get_worst_day(month),
-        average_score = get_monthly_average_score(month),
-        number_of_days_with_above_average_sleep = get_number_of_days_with_above_average_sleep(month),
-    )
+def get_best_days(month: MonthBucket) -> List[Dict[str, Any]]:
+    """Returns the top four days in the month ranked by score."""
+    top_days = heapq.nlargest(4, month.days, key=lambda d: d.day_score)
+    return [_serialize_day(day) for day in top_days]
 
-def bucket_by_month(days):
-    month_key_hash = {}
-    for d in days:
-        k = (d.dt.year, d.dt.month)
-        if k not in month_key_hash:
-            month_key_hash[k] = []
-        month_key_hash[(d.dt.year, d.dt.month)].append(d)
 
-    # freeze the list
+def get_worst_day(month: MonthBucket) -> Dict[str, Any]:
+    """Returns the lowest scoring day in the month."""
+    return _serialize_day(min(month.days, key=lambda d: d.day_score))
+
+
+def get_monthly_average_score(month: MonthBucket) -> float:
+    """Returns the mean score for the given month."""
+    return sum(d.day_score for d in month.days) / len(month.days)
+
+
+def monthly_summary(month: MonthBucket) -> Dict[str, Any]:
+    """Builds a JSON-serialisable summary for the supplied month bucket."""
+    return {
+        "month_name": month_map.get(month.month, str(month.month)),
+        "year": month.year,
+        "days_logged": len(month.days),
+        "top_four_days": get_best_days(month),
+        "worst_day": get_worst_day(month),
+        "average_score": get_monthly_average_score(month),
+        "number_of_days_with_above_average_sleep": get_number_of_days_with_above_average_sleep(month),
+    }
+
+
+def bucket_by_month(days: Iterable[DayRecord]) -> List[MonthBucket]:
+    """Groups DayRecord instances by year/month."""
+    month_key_hash: Dict[tuple[int, int], List[DayRecord]] = {}
+    for day in days:
+        key = (day.dt.year, day.dt.month)
+        month_key_hash.setdefault(key, []).append(day)
+
     return [
-        MonthBucket(cur_year, cur_month, sorted(days, key=lambda d:d.dt))
-        for (cur_year, cur_month), days in month_key_hash.items()
+        MonthBucket(year, month, sorted(records, key=lambda d: d.dt))
+        for (year, month), records in sorted(month_key_hash.items())
     ]
