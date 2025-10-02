@@ -3,7 +3,8 @@ import './index.css';
 import ReceiptGenerator from './ReceiptGenerator';
 
 export default function App() {
-  const [receipts, setReceipts] = useState(null);
+  const [summaries, setSummaries] = useState([]);
+  const [filename, setFilename] = useState("");
 
   async function handleUpload(e) {
     e.preventDefault();
@@ -19,8 +20,10 @@ export default function App() {
         body: formData,
       });
       console.log("status", res.status);
-      const data = await res.json();
-      console.log("data", data);
+      const json = await res.json();
+      console.log(json)
+      setFilename(json.filename);
+      setSummaries(json.summaries);
     } catch (err) {
       console.error("fetch failed", err);
     }
@@ -43,17 +46,17 @@ export default function App() {
         </form>
       </section>
 
-      {receipts && (
-        <section>
-          {receipts.map((summary, i) => (
-            <ReceiptGenerator
-              key={i}
-              summary={summary}
-              title={`${summary.month_name} ${summary.year}`}
-            />
-          ))}
-        </section>
-      )}
+      {filename && <p>Uploaded file: {filename}</p>}
+
+      <section>
+      {summaries.map((summary, i) => (
+        <ReceiptGenerator
+          key={i}
+          summary={summary}
+          title={`${summary.month_name} ${summary.year}`}
+        />
+      ))}
+    </section>
     </main>
   );
 }

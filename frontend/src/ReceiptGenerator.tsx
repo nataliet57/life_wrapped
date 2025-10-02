@@ -1,82 +1,74 @@
-import React from 'react';
-import './index.css';
+import React from "react";
+import "./index.css";
 
-const formatValue = (key, value) => {
-  if (value === null || value === undefined) {
-    return '—';
-  }
-
-  if (typeof value === 'object') {
-    if (isDayRecord(value)) {
-      return formatDayRecord(value);
-    }
-    return JSON.stringify(value);
-  }
-
-  if (typeof value === 'number' && key.toLowerCase().includes('score')) {
-    return value.toFixed(2);
-  }
-
-  return String(value);
-};
-
-const isDayRecord = (candidate) =>
-  candidate &&
-  typeof candidate.dt !== 'undefined' &&
-  typeof candidate.day_score !== 'undefined';
-
-const formatDayRecord = (day) => {
-  const date = formatDate(day.dt);
-  const score =
-    typeof day.day_score === 'number' ? day.day_score.toFixed(2) : day.day_score;
-  const highlight = day.highlight ? ` - ${day.highlight}` : '';
-  return `${date} (${score})${highlight}`;
-};
-
-const formatDate = (value) => {
-  if (value instanceof Date) {
-    return value.toISOString().split('T')[0];
-  }
-  if (typeof value === 'string') {
-    return value.split('T')[0];
+function formatValue(value) {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "number") return value.toFixed(2);
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const date = value.dt?.split("T")[0];
+    const score = value.day_score ? value.day_score.toFixed(2) : "";
+    const highlight = value.highlight ? ` - ${value.highlight}` : "";
+    return `${date ?? ""} (${score})${highlight}`;
   }
   return String(value);
-};
-
-const LifeReceiptTable = ({ summary }) => {
-  const entries = Object.entries(summary ?? {});
-
-  return (
-    <table className="stats">
-      <thead>
-        <tr>
-          <th scope="col" className="begin">
-            QTY
-          </th>
-          <th scope="col">ITEM</th>
-          <th scope="col" className="length">
-            AMT
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {entries.map(([key, value], index) => (
-          <tr key={key}>
-            <td className="begin">{index + 1}</td>
-            <td className="name">{key}</td>
-            <td className="length">{formatValue(key, value)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-};
+}
 
 export default function ReceiptGenerator({ summary, title = "Life Receipt" }) {
+  const rows = [
+    ["Days Logged", "days_logged"],
+    ["Average Score", "average_score"],
+    ["Top Five Days", "top_five_days"],
+    ["Worst Day", "worst_day"],
+    ["Days Above Avg Sleep", "number_of_days_with_above_average_sleep"],
+  ];
+
   return (
     <div className="receiptContainer" aria-labelledby="receipt-title">
       <h2 id="receipt-title">{title}</h2>
-      <LifeReceiptTable summary={summary} />
+      <table className="stats">
+        <thead>
+          <tr>
+            <th className="begin">QTY</th>
+            <th>ITEM</th>
+            <th className="length">AMT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([label, key], index) => {
+            const value = summary[key];
+
+            // special handling for top_four_days
+            if ( (key === "top_four_days" || key === "worst_day") && Array.isArray(value) ) {
+              return[
+                <tr key={key}>
+                  <td className="begin">{index+1}</td>
+                  <td className="name">{label}</td>
+                  <td className="length"></td>
+                </tr>,
+
+                ...value.map((day, subIndex) => (
+                  <tr key={`${key}-${subIndex}`}>
+                    <td className="begin"></td>
+                    <td className="name" style={{ paddingLeft: "1rem" }}>
+                      {day.dt} - {day.highlight}
+                    </td>
+                    <td className="length">{day.day_score}</td>
+                  </tr>
+                )),
+              ]
+            }
+
+            // normal row
+            return (
+              <tr key={key}>
+                <td className="begin">{index + 1}</td>
+                <td className="name">{label}</td>
+                <td className="length">{formatValue(value)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
 
       <figure>
         <img

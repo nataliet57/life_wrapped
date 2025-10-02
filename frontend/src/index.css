@@ -18,7 +18,7 @@
 .receiptContainer {
   background-image: url('./assets/wrinkled-paper-texture-7.jpg');
   background-position: center;
-  width: 440px;
+  width: 340px;
   filter: brightness(105%);
   padding: 20px;
   text-transform: uppercase;

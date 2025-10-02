@@ -24,14 +24,15 @@ def _serialize_day(day: DayRecord) -> Dict[str, Any]:
 
 
 def get_best_days(month: MonthBucket) -> List[Dict[str, Any]]:
-    """Returns the top four days in the month ranked by score."""
-    top_days = heapq.nlargest(4, month.days, key=lambda d: d.day_score)
+    """Returns the top five days in the month ranked by score."""
+    top_days = heapq.nlargest(5, month.days, key=lambda d: d.day_score)
     return [_serialize_day(day) for day in top_days]
 
 
-def get_worst_day(month: MonthBucket) -> Dict[str, Any]:
+def get_worst_days(month: MonthBucket) -> List[Dict[str, Any]]:
     """Returns the lowest scoring day in the month."""
-    return _serialize_day(min(month.days, key=lambda d: d.day_score))
+    worst_days = heapq.nsmallest(3, month.days, key=lambda d: d.day_score)
+    return [_serialize_day(day) for day in worst_days]
 
 
 def get_monthly_average_score(month: MonthBucket) -> float:
@@ -39,17 +40,24 @@ def get_monthly_average_score(month: MonthBucket) -> float:
     return sum(d.day_score for d in month.days) / len(month.days)
 
 
+
 def monthly_summary(month: MonthBucket) -> Dict[str, Any]:
     """Builds a JSON-serialisable summary for the supplied month bucket."""
-    return {
+    summary: Dict[str, Any] = {
         "month_name": month_map.get(month.month, str(month.month)),
         "year": month.year,
         "days_logged": len(month.days),
-        "top_four_days": get_best_days(month),
-        "worst_day": get_worst_day(month),
+        "top_five_days": get_best_days(month),
+        "worst_day": get_worst_days(month),
         "average_score": get_monthly_average_score(month),
-        "number_of_days_with_above_average_sleep": get_number_of_days_with_above_average_sleep(month),
     }
+
+    if any(day.sleep is not None for day in month.days):
+        summary["number_of_days_with_above_average_sleep"] = (
+            get_number_of_days_with_above_average_sleep(month)
+        )
+
+    return summary
 
 
 def bucket_by_month(days: Iterable[DayRecord]) -> List[MonthBucket]:
