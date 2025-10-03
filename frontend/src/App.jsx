@@ -69,6 +69,26 @@ export default function App() {
         <p id="home_header">Your month-to-month life highlights</p>
       </header>
 
+      <section>
+        <button type="button" onClick={handleSpotifyLogin}>
+          Log in with Spotify
+        </button>
+
+        {spotifyStatus === 'error' && (
+          <p>Could not load Spotify data. Try again later.</p>
+        )}
+
+        {spotifyStatus === 'authenticated' && spotifySummary && (
+          <ul>
+            {Object.entries(spotifySummary).map(([month, info]) => (
+              <li key={month}>
+                {month}: {info.track} ({info.plays} plays)
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <section className="customize" aria-labelledby="customize-title">
         <h2 id="customize-title" className="customize-header">
           Upload Excel
@@ -112,6 +132,14 @@ export default function App() {
             title={`${summary.month_name} ${summary.year}`}
           />
         ))}
+        <ul>
+          {/* {Object.entries(spotifySummary).map(([month, info]) => (
+            <li key={month}>
+              {month}: {info.track} ({info.plays} plays)
+            </li>
+          ))} */}
+        </ul>
+
       </section>
     </main>
   );
