@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './index.css';
 import ReceiptGenerator from './ReceiptGenerator';
 
 export default function App() {
   const [summaries, setSummaries] = useState([]);
   const [filename, setFilename] = useState("");
+  const [spotifySummary, setSpotifySummary] = useState(null);
+  const [spotifyStatus, setSpotifyStatus] = useState('idle');
 
   async function handleUpload(e) {
     e.preventDefault();
@@ -18,6 +20,7 @@ export default function App() {
       const res = await fetch("http://127.0.0.1:5000/upload", {
         method: "POST",
         body: formData,
+        credentials: 'include',
       });
       console.log("status", res.status);
       const json = await res.json();
@@ -28,6 +31,41 @@ export default function App() {
       console.error("fetch failed", err);
     }
   }
+  
+  useEffect(() => {
+    async function fetchSpotifySummary() {
+      setSpotifyStatus('loading');
+      try {
+        const res = await fetch('http://127.0.0.1:5000/api/summary', {
+          credentials: 'include',
+        });
+
+        if (res.status === 401) {
+          setSpotifyStatus('unauthenticated');
+          setSpotifySummary(null);
+          return;
+        }
+
+        if (!res.ok) {
+          setSpotifyStatus('error');
+          return;
+        }
+
+        const data = await res.json();
+        setSpotifySummary(data.spotify_summary || {});
+        setSpotifyStatus('authenticated');
+      } catch (error) {
+        console.error('Failed to load Spotify summary', error);
+        setSpotifyStatus('error');
+      }
+    }
+
+    fetchSpotifySummary();
+  }, []);
+
+  const handleSpotifyLogin = () => {
+    window.location.href = 'http://127.0.0.1:5000/auth/login';
+  };
 
   return (
     <main>
@@ -47,6 +85,28 @@ export default function App() {
       </section>
 
       {filename && <p>Uploaded file: {filename}</p>}
+
+      <section>
+        <h2>Spotify Listening Summary</h2>
+        {spotifyStatus === 'loading' && <p>Loading Spotify data…</p>}
+        {spotifyStatus === 'unauthenticated' && (
+          <button type="button" onClick={handleSpotifyLogin}>
+            Sign in with Spotify
+          </button>
+        )}
+        {spotifyStatus === 'error' && (
+          <p>Could not load Spotify data. Try again later.</p>
+        )}
+        {spotifyStatus === 'authenticated' && spotifySummary && (
+          <ul>
+            {Object.entries(spotifySummary).map(([month, info]) => (
+              <li key={month}>
+                {month}: {info.track} ({info.plays} plays)
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section>
       {summaries.map((summary, i) => (
