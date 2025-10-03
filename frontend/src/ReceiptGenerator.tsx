@@ -38,7 +38,7 @@ export default function ReceiptGenerator({ summary, title = "Life Receipt" }) {
             const value = summary[key];
 
             // special handling for top_four_days
-            if ( (key === "top_four_days" || key === "worst_day") && Array.isArray(value) ) {
+            if ( (key === "top_five_days" || key === "worst_day") && Array.isArray(value) ) {
               return[
                 <tr key={key}>
                   <td className="begin">{index+1}</td>

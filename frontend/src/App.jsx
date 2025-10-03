@@ -1,67 +1,62 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './index.css';
 import ReceiptGenerator from './ReceiptGenerator';
 
 export default function App() {
   const [summaries, setSummaries] = useState([]);
-  const [filename, setFilename] = useState("");
+  const [filename, setFilename] = useState('');
   const [spotifySummary, setSpotifySummary] = useState(null);
   const [spotifyStatus, setSpotifyStatus] = useState('idle');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
-  async function handleUpload(e) {
+  async function fetchAll(e) {
     e.preventDefault();
     const fileInput = e.target.elements.file;
     if (!fileInput.files?.length) return;
 
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    formData.append('file', fileInput.files[0]);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/upload", {
-        method: "POST",
-        body: formData,
-        credentials: 'include',
-      });
-      console.log("status", res.status);
-      const json = await res.json();
-      console.log(json)
-      setFilename(json.filename);
-      setSummaries(json.summaries);
+      const [uploadRes, spotifyRes] = await Promise.all([
+        fetch('http://127.0.0.1:5000/upload', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        }),
+        fetch('http://127.0.0.1:5000/api/summary', {
+          credentials: 'include',
+        }),
+      ]);
+
+      // handle upload result
+      if (!uploadRes.ok) {
+        console.log(uploadRes.status);
+        throw new Error('failed upload');
+      }
+      const uploadData = await uploadRes.json();
+      setFilename(uploadData.filename);
+      setSummaries(uploadData.summaries);
+
+      // handle spotify result
+      if (spotifyRes.status === 401) {
+        setSpotifyStatus('unauthenticated');
+        setSpotifySummary(null);
+        return;
+      }
+      if (!spotifyRes.ok) {
+        setSpotifyStatus('error');
+        return;
+      }
+      const spotifyData = await spotifyRes.json();
+      setSpotifySummary(spotifyData.spotify_summary || {});
+      setSpotifyStatus('authenticated');
     } catch (err) {
-      console.error("fetch failed", err);
+      console.error('failed to fetch', err);
+      setUploadError(err.message);
     }
   }
-  
-  useEffect(() => {
-    async function fetchSpotifySummary() {
-      setSpotifyStatus('loading');
-      try {
-        const res = await fetch('http://127.0.0.1:5000/api/summary', {
-          credentials: 'include',
-        });
-
-        if (res.status === 401) {
-          setSpotifyStatus('unauthenticated');
-          setSpotifySummary(null);
-          return;
-        }
-
-        if (!res.ok) {
-          setSpotifyStatus('error');
-          return;
-        }
-
-        const data = await res.json();
-        setSpotifySummary(data.spotify_summary || {});
-        setSpotifyStatus('authenticated');
-      } catch (error) {
-        console.error('Failed to load Spotify summary', error);
-        setSpotifyStatus('error');
-      }
-    }
-
-    fetchSpotifySummary();
-  }, []);
 
   const handleSpotifyLogin = () => {
     window.location.href = 'http://127.0.0.1:5000/auth/login';
@@ -78,13 +73,14 @@ export default function App() {
         <h2 id="customize-title" className="customize-header">
           Upload Excel
         </h2>
-        <form onSubmit={handleUpload}>
+        <form onSubmit={fetchAll}>
           <input type="file" name="file" accept=".xlsx" />
           <button type="submit">Generate Receipts</button>
         </form>
       </section>
 
       {filename && <p>Uploaded file: {filename}</p>}
+      {uploadError && <p style={{ color: 'red' }}>Error: {uploadError}</p>}
 
       <section>
         <h2>Spotify Listening Summary</h2>
@@ -109,14 +105,14 @@ export default function App() {
       </section>
 
       <section>
-      {summaries.map((summary, i) => (
-        <ReceiptGenerator
-          key={i}
-          summary={summary}
-          title={`${summary.month_name} ${summary.year}`}
-        />
-      ))}
-    </section>
+        {summaries.map((summary, i) => (
+          <ReceiptGenerator
+            key={i}
+            summary={summary}
+            title={`${summary.month_name} ${summary.year}`}
+          />
+        ))}
+      </section>
     </main>
   );
 }

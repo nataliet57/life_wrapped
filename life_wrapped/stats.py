@@ -40,7 +40,6 @@ def get_monthly_average_score(month: MonthBucket) -> float:
     return sum(d.day_score for d in month.days) / len(month.days)
 
 
-
 def monthly_summary(month: MonthBucket) -> Dict[str, Any]:
     """Builds a JSON-serialisable summary for the supplied month bucket."""
     summary: Dict[str, Any] = {

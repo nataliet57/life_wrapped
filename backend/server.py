@@ -62,7 +62,7 @@ def callback():
     # Save tokens in session
     session["access_token"] = data["access_token"]
     session["refresh_token"] = data.get("refresh_token")
-    return redirect(url_for("summary"))
+    return redirect("http://localhost:5173/")
 
 @app.route("/api/summary")
 def summary():
