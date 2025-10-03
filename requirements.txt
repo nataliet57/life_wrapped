@@ -5,3 +5,5 @@ openpyxl
 matplotlib
 requests
 flask-cors
+dotenv
+flask_session
