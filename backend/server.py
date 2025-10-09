@@ -40,9 +40,6 @@ BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend",
 def index():
     return jsonify({"message": "Life Wrapped Flask backend is running!"})
 
-@app.route("/")
-def index():
-    return jsonify()
 # ---------------- Spotify OAuth ---------------- #
 
 @app.route("/auth/login")
@@ -145,11 +142,11 @@ def spotify_summary():
     resp = requests.get(SPOTIFY_RECENT_URL, headers=headers, params={"limit": 50})
     return jsonify(resp.json()), resp.status_code
 
-# serve react app from flask 
+
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
     if path != "" and os.path.exists(os.path.join(BUILD_DIR, path)):
         return send_from_directory(BUILD_DIR, path)
     else:
-        return send_from_directory(BUILD_DIR, path)
+        return send_from_directory(BUILD_DIR, "index.html")

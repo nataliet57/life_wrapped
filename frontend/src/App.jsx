@@ -8,11 +8,11 @@ export default function App() {
   const [spotifySummary, setSpotifySummary] = useState({});
   const [uploadError, setUploadError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || window.location.origin;
 
-  // --- fetch combined summary from Flask (session-backed)
   async function fetchLastSummary() {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/last-summary', {
+      const res = await fetch(`${API_BASE}api/last-summary`, {
         credentials: 'include',
       });
       if (!res.ok) return; // no summary yet is fine
@@ -53,7 +53,7 @@ export default function App() {
       setLoading(true);
       setUploadError(null);
 
-      const uploadRes = await fetch('http://127.0.0.1:5000/upload', {
+      const uploadRes = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -75,7 +75,7 @@ export default function App() {
 
   // send the user into the OAuth flow; Flask will redirect back to /?spotify=1
   const handleSpotifyLogin = () => {
-    window.location.href = 'http://127.0.0.1:5000/auth/login';
+    window.location.href = `${API_BASE}/auth/login`;
   };
 
   return (
