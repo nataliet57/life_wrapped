@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, redirect, request, session, jsonify
+from flask import Flask, redirect, request, session, jsonify, send_from_directory
 from flask_session import Session
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -33,8 +33,16 @@ SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")  # must match Spotify d
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_RECENT_URL = "https://api.spotify.com/v1/me/player/recently-played"
+# Flask serve React dist folder
+BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "dist")
 
+@app.route("/")
+def index():
+    return jsonify({"message": "Life Wrapped Flask backend is running!"})
 
+@app.route("/")
+def index():
+    return jsonify()
 # ---------------- Spotify OAuth ---------------- #
 
 @app.route("/auth/login")
@@ -136,3 +144,12 @@ def spotify_summary():
     headers = {"Authorization": f"Bearer {session['access_token']}"}
     resp = requests.get(SPOTIFY_RECENT_URL, headers=headers, params={"limit": 50})
     return jsonify(resp.json()), resp.status_code
+
+# serve react app from flask 
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve(path):
+    if path != "" and os.path.exists(os.path.join(BUILD_DIR, path)):
+        return send_from_directory(BUILD_DIR, path)
+    else:
+        return send_from_directory(BUILD_DIR, path)
