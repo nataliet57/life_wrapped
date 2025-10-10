@@ -45,6 +45,7 @@ BUILD_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 @app.route("/auth/login")
 def login():
+    app.logger.info("/auth/login: redirecting to Spotify auth")
     scope = "user-read-recently-played"
     params = {
         "client_id": SPOTIFY_CLIENT_ID,
@@ -52,15 +53,19 @@ def login():
         "redirect_uri": SPOTIFY_REDIRECT_URI,
         "scope": scope,
     }
+    app.logger.debug("/auth/login params: %s", params)
     query = "&".join([f"{k}={requests.utils.quote(v)}" for k, v in params.items()])
     return redirect(f"{SPOTIFY_AUTH_URL}?{query}")
 
 
 @app.route("/auth/callback")
 def callback():
+    app.logger.info("/auth/callback: received request")
     code = request.args.get("code")
     if not code:
+        app.logger.error("/auth/callback: missing code param")
         return "No code returned", 400
+    app.logger.debug("/auth/callback: code=%s", code[:10] + "...")
 
     payload = {
         "grant_type": "authorization_code",
@@ -69,20 +74,26 @@ def callback():
         "client_id": SPOTIFY_CLIENT_ID,
         "client_secret": SPOTIFY_CLIENT_SECRET,
     }
+    app.logger.debug("/auth/callback payload: %s", {k: ('***' if 'secret' in k else v) for k, v in payload.items()})
     resp = requests.post(SPOTIFY_TOKEN_URL, data=payload)
+    app.logger.info("/auth/callback: token endpoint status %s", resp.status_code)
     data = resp.json()
 
     if "access_token" not in data:
+        app.logger.error("/auth/callback: access_token missing. Response: %s", data)
         return jsonify(data), 400
 
     session["access_token"] = data["access_token"]
     session["refresh_token"] = data.get("refresh_token")
+    app.logger.info("/auth/callback: stored access & refresh tokens")
 
     # Fetch Spotify data
     headers = {"Authorization": f"Bearer {session['access_token']}"}
     r = requests.get(SPOTIFY_RECENT_URL, headers=headers, params={"limit": 50})
+    app.logger.info("/auth/callback: recently-played status %s", r.status_code)
     if r.status_code == 200:
         items = r.json().get("items", [])
+        app.logger.debug("/auth/callback: fetched %d recent items", len(items))
         monthly_counts = {}
         for item in items:
             month = item["played_at"][:7]
@@ -94,6 +105,7 @@ def callback():
             m: max(counts.items(), key=lambda x: x[1])
             for m, counts in monthly_counts.items()
         }
+        app.logger.debug("/auth/callback: top tracks %s", top_tracks)
         session["spotify_summary"] = {
             month: {"track": track, "plays": plays}
             for month, (track, plays) in top_tracks.items()
@@ -103,6 +115,7 @@ def callback():
         session["last_summary"]["spotify_summary"] = session["spotify_summary"]
 
     # Redirect back to your deployed frontend
+    app.logger.info("/auth/callback: redirecting to %s", FRONTEND_URL)
     return redirect(f"{FRONTEND_URL}?spotify=1")
 
 
@@ -110,15 +123,20 @@ def callback():
 
 @app.route("/upload", methods=["POST"])
 def upload():
+    app.logger.info("/upload: received file upload")
     if "file" not in request.files:
+        app.logger.warning("/upload: no file part in request")
         return jsonify({"error": "No file uploaded"}), 400
     file = request.files["file"]
+    app.logger.debug("/upload: file name %s", file.filename)
 
     from life_wrapped.io import load_days_from_excel
     from life_wrapped.stats import monthly_summary
 
     days = load_days_from_excel(file)
+    app.logger.info("/upload: loaded %d day records", len(days))
     summaries = [monthly_summary(m) for m in days]
+    app.logger.info("/upload: generated %d monthly summaries", len(summaries))
 
     session["last_summary"] = {
         "filename": file.filename,

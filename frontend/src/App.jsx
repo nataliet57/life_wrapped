@@ -53,7 +53,7 @@ export default function App() {
       setLoading(true);
       setUploadError(null);
 
-      const uploadRes = await fetch(`${API_BASE}/upload`, {
+      const uploadRes = await fetch(`${API_BASE}upload`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
