@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import requests
 from flask import Flask, redirect, request, session, jsonify, send_from_directory
 from flask_session import Session
@@ -20,11 +22,14 @@ app.config["SESSION_COOKIE_SECURE"] = True  # enforce HTTPS-only cookies
 Session(app)
 
 FRONTEND_URL = os.getenv("FRONTEND_URL")
-CORS(
-    app,
-    resources={r"/*": {"origins": [FRONTEND_URL]}},
-    supports_credentials=True,
-)
+if FRONTEND_URL:
+    CORS(
+        app,
+        resources={r"/*": {"origins": [FRONTEND_URL]}},
+        supports_credentials=True,
+    )
+else:
+    CORS(app, supports_credentials=True)
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
@@ -34,11 +39,7 @@ SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_RECENT_URL = "https://api.spotify.com/v1/me/player/recently-played"
 # Flask serve React dist folder
-BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "dist")
-
-@app.route("/")
-def index():
-    return jsonify({"message": "Life Wrapped Flask backend is running!"})
+BUILD_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 # ---------------- Spotify OAuth ---------------- #
 
@@ -145,8 +146,10 @@ def spotify_summary():
 
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
-def serve(path):
-    if path != "" and os.path.exists(os.path.join(BUILD_DIR, path)):
-        return send_from_directory(BUILD_DIR, path)
-    else:
-        return send_from_directory(BUILD_DIR, "index.html")
+def serve_frontend(path: str):
+    if path:
+        target = BUILD_DIR / path
+        if target.is_file():
+            return send_from_directory(str(BUILD_DIR), path)
+
+    return send_from_directory(str(BUILD_DIR), "index.html")
