@@ -11,7 +11,8 @@ export default function App() {
 
   async function fetchLastSummary() {
     try {
-      const res = await fetch(`${API_BASE}/api/last-summary`, {
+      // flag
+      const res = await fetch(`${API_BASE}api/last-summary`, {
         credentials: 'include',
       });
       if (!res.ok) return; // no summary yet is fine
@@ -23,9 +24,9 @@ export default function App() {
     }
   }
 
-  useEffect(() => {
-    fetchLastSummary();
-  }, []);
+  // useEffect(() => {
+  //   fetchLastSummary();
+  // }, []);
 
   // handle upload → saves into Flask session, then re-hydrate
   async function handleUpload(e) {
@@ -40,7 +41,7 @@ export default function App() {
       setLoading(true);
       setUploadError(null);
 
-      const uploadRes = await fetch(`${API_BASE}/upload`, {
+      const uploadRes = await fetch(`${API_BASE}upload`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
