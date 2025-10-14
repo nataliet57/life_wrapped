@@ -1,13 +1,55 @@
+body {
+  margin: 0;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  background-color: #f7f8fa;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  max-width: 1200px;
+}
+
+main {
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+header {
+  text-align: center;
+}
+
+.app-title {
+  font-family: 'archivo-black', 'Helvetica';
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  letter-spacing: 1px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
 @font-face {
   font-family: 'receipt';
   src: url('./assets/Merchant_Copy.ttf') format('truetype');
   size-adjust: 115%;
 }
+
+@font-face {
+  font-family: 'archivo-black';
+  src: url('./assets/ArchivoBlack-Regular.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
 .customize {
-  min-width: 30%;
-  max-width: 50%;
-  padding-left: 2vw;
-  align-self: stretch;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  align-self: center;
+  text-align: center;
 }
 .customize-header {
   font-weight: 700;
@@ -22,6 +64,11 @@
   filter: brightness(105%);
   padding: 20px;
   text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 0 auto;
 }
 
 .date {
@@ -41,6 +88,8 @@ thead {
   font-family: 'receipt', 'Anonymous Pro', 'Courier New', Courier, monospace;
   border-collapse: collapse;
   margin: 5px 0vh;
+  align-self: stretch;
+  text-align: left;
 }
 
 .length {
@@ -52,4 +101,73 @@ thead {
 .name {
   width: 195px;
   overflow: auto;
+}
+
+.receiptContainer figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 24px 0 0;
+}
+
+.receiptContainer figure img {
+  margin: 0 auto;
+}
+
+.receipt-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.receipt-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  text-transform: none;
+}
+
+.receipt-controls label {
+  font-weight: 600;
+}
+
+.receipt-controls select {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+  text-transform: none;
+}
+
+.heatmap-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.heatmap-grid figure {
+  margin: 0;
+  text-align: center;
+}
+
+.heatmap-grid img {
+  width: min(360px, 100%);
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+
+.heatmap-grid figcaption {
+  margin-top: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }

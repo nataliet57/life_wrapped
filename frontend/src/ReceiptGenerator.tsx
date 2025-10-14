@@ -1,5 +1,6 @@
 import React from "react";
 import "./index.css";
+import barcodeImg from './assets/barcode.png';
 
 function formatValue(value) {
   if (value === null || value === undefined) return "—";
@@ -72,7 +73,7 @@ export default function ReceiptGenerator({ summary, title = "Life Receipt" }) {
 
       <figure>
         <img
-          src="./assets/barcode.png"
+          src={barcodeImg}
           alt="Receipt barcode"
           width="300"
           height="70"

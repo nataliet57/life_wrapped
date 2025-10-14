@@ -1,65 +1,100 @@
-from life_wrapped.models import month_map
-import numpy as np
-import matplotlib.pyplot as plt
-import os
+from pathlib import Path
 import calendar
-from matplotlib import colors
+
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import colors
 from matplotlib.colors import LinearSegmentedColormap
 
+from life_wrapped.models import month_map
 
-# Prepares the (7, W) array and tick label metadata.
-def build_calendar_grid(months_cleaned):
-    grids = []
-    for current_month_bucket in months_cleaned:
-        current_days = current_month_bucket.days
-        build_7_w_array(current_days, month_map[current_month_bucket.month])
+OUTPUTS_DIR = Path(__file__).resolve().parent.parent / "outputs"
 
-def build_7_w_array(days, month_label):
+
+def generate_calendar_heatmap(month_bucket, output_dir=OUTPUTS_DIR):
+    """Generate a heatmap image for a single month bucket."""
+    days = month_bucket.days
+    if not days:
+        return None
+
+    matrix, weeks = _build_calendar_matrix(days)
+    month_label = month_map.get(month_bucket.month, str(month_bucket.month))
+    year = days[0].dt.year
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{month_label}-{year}.png"
+    outfile = output_dir / filename
+
+    render_calendar_heatmap(matrix, weeks, outfile)
+
+    return {
+        "month": month_label,
+        "year": year,
+        "image_url": f"/outputs/{filename}",
+    }
+
+
+def generate_calendar_heatmaps(months_cleaned, output_dir=OUTPUTS_DIR):
+    """Generate heatmaps for each month and return metadata for the images."""
+    heatmaps = []
+    for month_bucket in months_cleaned:
+        result = generate_calendar_heatmap(month_bucket, output_dir=output_dir)
+        if result:
+            heatmaps.append(result)
+    return heatmaps
+
+
+def _build_calendar_matrix(days):
     year, month = days[0].dt.year, days[0].dt.month
-    # offset = weekday of 1st day (0=Monday, 6=Sunday)
-    offset, num_days = calendar.monthrange(year, month)  
-    
-    W = (num_days + offset + 6) // 7  # total weeks needed
-    A = [[None for _ in range(W)] for _ in range(7)]
-    
-    for d in days:
-        day_of_month = d.dt.day
-        weekday = d.dt.weekday()
+    offset, num_days = calendar.monthrange(year, month)
+
+    weeks = (num_days + offset + 6) // 7
+    matrix = [[np.nan for _ in range(weeks)] for _ in range(7)]
+
+    for day in days:
+        day_of_month = day.dt.day
+        weekday = day.dt.weekday()
         week = (day_of_month + offset - 1) // 7
-        A[weekday][week]= d.day_score
+        matrix[weekday][week] = day.day_score
 
-    os.makedirs("outputs", exist_ok=True)
-    outfile = os.path.join("outputs", f"{month_label}.png")
-    render_calendar_heatmap(A, W, outfile)
-    return outfile
+    return matrix, weeks
 
-# Plots with matplotlib, adds labels, saves PNG.
-def render_calendar_heatmap(A, W, outfile):
-    A = np.array(A, dtype=float)
-    fig, ax = plt.subplots(figsize=(W * 0.2 + 2, 3))
+def render_calendar_heatmap(matrix, weeks, outfile):
     plt.rcParams["font.family"] = "Helvetica"
-    
-    # Define custom gradient: yellow → light green → dark green
-    cmap = LinearSegmentedColormap.from_list(
-        "custom_green",
-        [(0, "yellow"), (0.5, "lightgreen"), (1, "darkgreen")]
-    )
+    array = np.array(matrix, dtype=float)
+    fig, ax = plt.subplots(figsize=(weeks * 0.2 + 2, 3))
 
-    # Normalize values 0 → 10
+    # --- Colormap ---
+    cmap = plt.cm.YlGn
     norm = colors.Normalize(vmin=0, vmax=10)
 
-    im = ax.imshow(A, aspect='auto', interpolation='nearest', cmap=cmap, norm=norm)
+    # --- Draw heatmap ---
+    im = ax.imshow(array, aspect="auto", interpolation="nearest", cmap=cmap, norm=norm)
 
+    # --- Grid styling ---
+    ax.set_xticks(np.arange(array.shape[1]) - 0.5, minor=True)
+    ax.set_yticks(np.arange(array.shape[0]) - 0.5, minor=True)
+    ax.grid(which="minor", color="white", linestyle="-", linewidth=1)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+    # --- Axis labels ---
     ax.set_yticks(range(7))
-    ax.set_yticklabels(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"])
+    ax.set_yticklabels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+    ax.set_xlabel("Week", fontsize=10)
+    ax.set_ylabel("Day of Week", fontsize=10)
 
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.spines[:].set_visible(True)
+    # --- Title ---
+    ax.set_title("Weekly Day Scores", fontsize=12, pad=10, weight="bold")
 
-    cbar = fig.colorbar(im, ax=ax, orientation="vertical", shrink=0.7)
-    cbar.set_label("Day Score (0–10)")
+    # --- Colorbar ---
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.ax.set_ylabel("Day Score (0–10)", rotation=270, labelpad=15, fontsize=9)
+    cbar.outline.set_visible(False)
 
+    # --- Cleanup & save ---
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     plt.tight_layout()
     fig.savefig(outfile, dpi=150)
+    plt.close(fig)
