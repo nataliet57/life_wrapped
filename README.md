@@ -1,5 +1,5 @@
 # Life Wrapped
-
+https://life-wrapped-app-2782afb29d43.herokuapp.com/
 Life Wrapped is a full-stack web app that turns your daily life journal and Spotify listening habits into playful “receipts” and visual summaries. Upload your Excel log to see month-by-month stats, generate per-month calendar heatmaps, and connect Spotify to pull in your top tracks.
 
 ## Features
